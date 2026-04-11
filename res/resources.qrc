@@ -1,0 +1,31 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/">
+        <!-- 图片资源 - picture -->
+        <file>picture/cxk_bg.bmp</file>
+        <file>picture/cxk_element.bmp</file>
+        <file>picture/cxk_mask.bmp</file>
+        <file>picture/fruit_bg.bmp</file>
+        <file>picture/fruit_element.bmp</file>
+        <file>picture/fruit_mask.bmp</file>
+        <file>picture/mh_bg.bmp</file>
+        <file>picture/mh_element.bmp</file>
+        <file>picture/mh_mask.bmp</file>
+        
+        <!-- 图片资源 - source -->
+        <file>source/level.bmp</file>
+        <file>source/llk.bmp</file>
+        <file>source/llk_main.bmp</file>
+        <file>source/setting.bmp</file>
+        <file>source/LLK.ico</file>
+        
+        <!-- 音频资源 -->
+        <file>audio/bgm.mp3</file>
+        <file>audio/cxk_clear.wav</file>
+        <file>audio/cxk_click.wav</file>
+        <file>audio/fruit_clear.wav</file>
+        <file>audio/fruit_click.wav</file>
+        <file>audio/mh_clear.wav</file>
+        <file>audio/mh_click.wav</file>
+    </qresource>
+</RCC>
