@@ -1,6 +1,12 @@
+package front;
+
+import back.ResourceManager;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 /**
  * 游戏界面面板
@@ -28,7 +34,7 @@ public class GamePanel extends JPanel {
     /** 元素块高度 */
     private int elemHeight;
     /** 地图起始X坐标 */
-    private static final int MAP_START_X = 20;
+    private static final int MAP_START_X = 5;
     /** 地图起始Y坐标 */
     private static final int MAP_START_Y = 50;
     /** 选中的第一个点 */
@@ -36,7 +42,7 @@ public class GamePanel extends JPanel {
     /** 选中的第二个点 */
     private Point selectedSecond = null;
     /** 连接路径 */
-    private java.util.List<Point> linkPath = null;
+    private List<Point> linkPath = null;
 
     public GamePanel() {
         resourceManager = ResourceManager.getInstance();
@@ -62,13 +68,6 @@ public class GamePanel extends JPanel {
             elemWidth = 40;
             elemHeight = 40;
         }
-    }
-
-    /**
-     * 初始化游戏地图
-     */
-    private void initGameMap() {
-        gameMap = new int[ROW_COUNT][COL_COUNT];
     }
 
     /**
@@ -122,7 +121,7 @@ public class GamePanel extends JPanel {
      * 设置连接路径（用于显示消除路径）
      * @param path 连接路径点列表
      */
-    public void setLinkPath(java.util.List<Point> path) {
+    public void setLinkPath(List<Point> path) {
         this.linkPath = path;
         repaint();
     }
@@ -259,5 +258,123 @@ public class GamePanel extends JPanel {
             }
         }
         return null;
+    }
+    
+    /**
+     * 开始游戏
+     */
+    public void startGame() {
+        initGameMap();
+        generateRandomMap();
+        clearSelection();
+        repaint();
+    }
+    
+    /**
+     * 初始化游戏地图
+     */
+    private void initGameMap() {
+        gameMap = new int[ROW_COUNT][COL_COUNT];
+        for (int i = 0; i < ROW_COUNT; i++) {
+            for (int j = 0; j < COL_COUNT; j++) {
+                gameMap[i][j] = -1;
+            }
+        }
+    }
+    
+    /**
+     * 生成随机地图（10行16列，16种图片）
+     */
+    private void generateRandomMap() {
+        int totalCells = ROW_COUNT * COL_COUNT;
+        int pairCount = totalCells / 2;
+        
+        int[] elements = new int[totalCells];
+        for (int i = 0; i < pairCount; i++) {
+            int type = i % 16;
+            elements[i * 2] = type;
+            elements[i * 2 + 1] = type;
+        }
+        
+        shuffleArray(elements);
+        
+        int index = 0;
+        for (int row = 0; row < ROW_COUNT; row++) {
+            for (int col = 0; col < COL_COUNT; col++) {
+                gameMap[row][col] = elements[index++];
+            }
+        }
+    }
+    
+    /**
+     * 数组随机打乱
+     */
+    private void shuffleArray(int[] array) {
+        Random random = new Random();
+        for (int i = array.length - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1);
+            int temp = array[i];
+            array[i] = array[j];
+            array[j] = temp;
+        }
+    }
+    
+    /**
+     * 暂停游戏
+     */
+    public void pauseGame() {
+        JOptionPane.showMessageDialog(this, "游戏已暂停", "提示", JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    /**
+     * 显示提示
+     */
+    public void showHint() {
+        JOptionPane.showMessageDialog(this, "暂无提示", "提示", JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    /**
+     * 重排地图
+     */
+    public void shuffleMap() {
+        if (gameMap == null) {
+            return;
+        }
+        
+        List<Integer> elements = new ArrayList<>();
+        for (int row = 0; row < ROW_COUNT; row++) {
+            for (int col = 0; col < COL_COUNT; col++) {
+                if (gameMap[row][col] >= 0) {
+                    elements.add(gameMap[row][col]);
+                }
+            }
+        }
+        
+        shuffleList(elements);
+        
+        int index = 0;
+        for (int row = 0; row < ROW_COUNT; row++) {
+            for (int col = 0; col < COL_COUNT; col++) {
+                if (gameMap[row][col] >= 0) {
+                    gameMap[row][col] = elements.get(index++);
+                }
+            }
+        }
+        
+        clearSelection();
+        repaint();
+    }
+    
+    /**
+     * List随机打乱
+     */
+    private void shuffleList(List<Integer> list) {
+        Random random = new Random();
+        for (int i = list.size() - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1);
+            int temp = list.get(i);
+            list.set(i, list.get(j));
+            list.set(j, temp);
+        }
     }
 }
