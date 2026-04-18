@@ -1,4 +1,5 @@
 build/
 docs/
-.qtcreator/
 prompts.txt
+.idea/
+out/
