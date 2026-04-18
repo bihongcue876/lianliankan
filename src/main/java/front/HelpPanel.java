@@ -9,9 +9,9 @@ import java.awt.*;
 public class HelpPanel extends JPanel {
     private JButton btnBack;
     private JPanel parentPanel;
-    private Main mainFrame;
+    private GameApp mainFrame;
 
-    public HelpPanel(Main mainFrame) {
+    public HelpPanel(GameApp mainFrame) {
         this.mainFrame = mainFrame;
         this.parentPanel = null;
         init();

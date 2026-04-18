@@ -15,12 +15,12 @@ public class RelaxGamePanel extends JPanel {
     private JButton btnSettings;
     private JButton btnHelp;
     private GamePanel gamePanel;
-    private Main mainFrame;
+    private GameApp mainFrame;
     private SettingsPanel settingsPanel;
     private HelpPanel helpPanel;
     private CardLayout cardLayout;
 
-    public RelaxGamePanel(Main mainFrame) {
+    public RelaxGamePanel(GameApp mainFrame) {
         this.mainFrame = mainFrame;
         cardLayout = new CardLayout();
         setLayout(cardLayout);

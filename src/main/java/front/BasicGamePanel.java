@@ -15,12 +15,12 @@ public class BasicGamePanel extends JPanel {
     private JButton btnSettings;
     private JButton btnHelp;
     private GamePanel gamePanel;
-    private Main mainFrame;
+    private GameApp mainFrame;
     private SettingsPanel settingsPanel;
     private HelpPanel helpPanel;
     private CardLayout cardLayout;
 
-    public BasicGamePanel(Main mainFrame) {
+    public BasicGamePanel(GameApp mainFrame) {
         this.mainFrame = mainFrame;
         cardLayout = new CardLayout();
         setLayout(cardLayout);

@@ -8,9 +8,9 @@ import java.awt.*;
  */
 public class RankPanel extends JPanel {
     private JButton btnBack;
-    private Main mainFrame;
+    private GameApp mainFrame;
 
-    public RankPanel(Main mainFrame) {
+    public RankPanel(GameApp mainFrame) {
         this.mainFrame = mainFrame;
         setLayout(null);
         setPreferredSize(new Dimension(800, 600));

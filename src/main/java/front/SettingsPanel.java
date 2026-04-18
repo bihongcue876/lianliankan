@@ -1,5 +1,6 @@
 package front;
 
+import back.ResourceManager;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -15,9 +16,9 @@ public class SettingsPanel extends JPanel {
     private JButton btnBack;
     private BufferedImage backgroundImage;
     private JPanel parentPanel;
-    private Main mainFrame;
+    private GameApp mainFrame;
 
-    public SettingsPanel(Main mainFrame) {
+    public SettingsPanel(GameApp mainFrame) {
         this.mainFrame = mainFrame;
         this.parentPanel = null;
         init();

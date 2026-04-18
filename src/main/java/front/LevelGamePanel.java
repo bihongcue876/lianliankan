@@ -12,12 +12,12 @@ import java.io.File;
 public class LevelGamePanel extends JPanel {
     private JButton btnBack;
     private BufferedImage backgroundImage;
-    private Main mainFrame;
+    private GameApp mainFrame;
     private SettingsPanel settingsPanel;
     private HelpPanel helpPanel;
     private CardLayout cardLayout;
 
-    public LevelGamePanel(Main mainFrame) {
+    public LevelGamePanel(GameApp mainFrame) {
         this.mainFrame = mainFrame;
         cardLayout = new CardLayout();
         setLayout(cardLayout);
