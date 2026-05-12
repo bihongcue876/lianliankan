@@ -21,6 +21,7 @@ public class HighScorePanel extends JDialog {
         setResizable(false);
 
         JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.setFont(new Font("宋体", Font.BOLD, 14));
         for (int i = 0; i < 3; i++) {
             tabbedPane.addTab(MODE_NAMES[i], createScoreTable(i));
         }
@@ -28,6 +29,7 @@ public class HighScorePanel extends JDialog {
         add(tabbedPane, BorderLayout.CENTER);
 
         JButton btnClose = new JButton("关闭");
+        btnClose.setFont(new Font("宋体", Font.PLAIN, 14));
         btnClose.addActionListener(e -> dispose());
         JPanel bottomPanel = new JPanel();
         bottomPanel.add(btnClose);
@@ -49,6 +51,8 @@ public class HighScorePanel extends JDialog {
         }
 
         JTable table = new JTable(model);
+        table.setFont(new Font("宋体", Font.PLAIN, 14));
+        table.getTableHeader().setFont(new Font("宋体", Font.BOLD, 14));
         table.getTableHeader().setReorderingAllowed(false);
         return new JScrollPane(table);
     }

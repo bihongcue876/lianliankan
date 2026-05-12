@@ -58,6 +58,7 @@ public class GamePanel extends JPanel {
     private int m_nCurrentPicNum = 16;
     private String m_strCurrentTheme = "fruit";
     private int m_nThemeType = 0;
+    private Color m_themeLabelColor = new Color(0, 0, 139);
 
     private JButton btnStart;
     private JButton btnPause;
@@ -66,6 +67,7 @@ public class GamePanel extends JPanel {
     private JButton btnHelp;
     private JButton btnBack;
     private JButton btnRestart;
+    private JButton btnGiveUp;
 
     private JLabel lblScore;
     private JLabel lblCombo;
@@ -112,36 +114,37 @@ public class GamePanel extends JPanel {
         btnReset = createButton("重排", 650, 185, 100, 35);
         btnRestart = createButton("重新开始", 650, 230, 100, 35);
         btnHelp = createButton("帮助", 650, 275, 100, 35);
+        btnGiveUp = createButton("放弃游戏", 650, 320, 100, 35);
         btnBack = createButton("返回", 650, 520, 100, 35);
 
         lblTitle = new JLabel("欢乐连连看");
         lblTitle.setBounds(650, 10, 100, 25);
         lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
-        lblTitle.setFont(new Font("微软雅黑", Font.BOLD, 12));
+        lblTitle.setFont(new Font("隶书", Font.BOLD, 14));
 
         lblScore = new JLabel("分数: 0");
-        lblScore.setBounds(650, 310, 100, 25);
+        lblScore.setBounds(650, 365, 100, 25);
         lblScore.setHorizontalAlignment(SwingConstants.CENTER);
-        lblScore.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        lblScore.setFont(new Font("黑体", Font.BOLD, 14));
 
         lblCombo = new JLabel("连击: 0");
-        lblCombo.setBounds(650, 340, 100, 25);
+        lblCombo.setBounds(650, 395, 100, 25);
         lblCombo.setHorizontalAlignment(SwingConstants.CENTER);
-        lblCombo.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        lblCombo.setFont(new Font("黑体", Font.BOLD, 14));
 
         lblTime = new JLabel("时间: --");
-        lblTime.setBounds(650, 370, 100, 25);
+        lblTime.setBounds(650, 425, 100, 25);
         lblTime.setHorizontalAlignment(SwingConstants.CENTER);
-        lblTime.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        lblTime.setFont(new Font("黑体", Font.BOLD, 14));
 
         lblLevel = new JLabel("关卡: 1");
-        lblLevel.setBounds(650, 400, 100, 25);
+        lblLevel.setBounds(650, 455, 100, 25);
         lblLevel.setHorizontalAlignment(SwingConstants.CENTER);
-        lblLevel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        lblLevel.setFont(new Font("黑体", Font.BOLD, 14));
 
         lblComboDisplay = new JLabel("", SwingConstants.CENTER);
         lblComboDisplay.setBounds(30, 520, 600, 40);
-        lblComboDisplay.setFont(new Font("微软雅黑", Font.BOLD, 20));
+        lblComboDisplay.setFont(new Font("黑体", Font.BOLD, 22));
         lblComboDisplay.setForeground(new Color(255, 100, 0));
 
         btnStart.addActionListener(e -> startGame());
@@ -150,12 +153,14 @@ public class GamePanel extends JPanel {
         btnReset.addActionListener(e -> doReset());
         btnRestart.addActionListener(e -> restartGame());
         btnHelp.addActionListener(e -> showHelp());
+        btnGiveUp.addActionListener(e -> giveUpGame());
         btnBack.addActionListener(e -> backToMain());
 
         btnPause.setEnabled(false);
         btnPrompt.setEnabled(false);
         btnReset.setEnabled(false);
         btnRestart.setEnabled(false);
+        btnGiveUp.setEnabled(false);
 
         add(btnStart);
         add(btnPause);
@@ -163,6 +168,7 @@ public class GamePanel extends JPanel {
         add(btnReset);
         add(btnRestart);
         add(btnHelp);
+        add(btnGiveUp);
         add(btnBack);
         add(lblTitle);
         add(lblScore);
@@ -186,6 +192,11 @@ public class GamePanel extends JPanel {
         if (elemBmp != null && maskBmp != null) {
             int numElements = maskBmp.getHeight() / 40;
             elementImages = ImageUtils.buildElementImages(elemBmp, maskBmp, numElements);
+        }
+        if ("fruit".equals(theme)) {
+            m_themeLabelColor = new Color(0, 0, 139);
+        } else {
+            m_themeLabelColor = Color.BLACK;
         }
     }
 
@@ -435,6 +446,11 @@ public class GamePanel extends JPanel {
         btnPrompt.setEnabled(true);
         btnReset.setEnabled(true);
         btnRestart.setEnabled(true);
+        btnGiveUp.setEnabled(true);
+
+        lblScore.setForeground(m_themeLabelColor);
+        lblCombo.setForeground(m_themeLabelColor);
+        lblLevel.setForeground(m_themeLabelColor);
 
         updateLabels();
         repaint();
@@ -496,12 +512,14 @@ public class GamePanel extends JPanel {
         contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         JLabel lbl = new JLabel("游戏已暂停", SwingConstants.CENTER);
-        lbl.setFont(new Font("微软雅黑", Font.BOLD, 16));
+        lbl.setFont(new Font("宋体", Font.BOLD, 18));
         contentPanel.add(lbl);
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         JButton resume = new JButton("继续");
         JButton saveExit = new JButton("保存退出");
+        resume.setFont(new Font("宋体", Font.PLAIN, 14));
+        saveExit.setFont(new Font("宋体", Font.PLAIN, 14));
         resume.addActionListener(e -> {
             m_bPaused = false;
             btnPause.setText("暂停");
@@ -813,6 +831,7 @@ public class GamePanel extends JPanel {
         btnPrompt.setEnabled(false);
         btnReset.setEnabled(false);
         btnRestart.setEnabled(false);
+        btnGiveUp.setEnabled(false);
 
         if (m_nGameMode == MODE_STAGE || m_nGameMode == MODE_BASIC) {
             m_nScore += (int) (m_nRemainTime * 10 + m_nClearCount * 5);
@@ -828,7 +847,7 @@ public class GamePanel extends JPanel {
                 String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
                 ScoreRecord record = new ScoreRecord(name.trim(), 
                     m_nGameMode == MODE_ENDLESS ? m_bigScore : BigInteger.valueOf(m_nScore),
-                    m_nGameMode == MODE_STAGE ? (STAGE_PARAMS[m_nLevel - 1][3] - m_nRemainTime) : 0,
+                    0,
                     m_nLevel, date, m_nGameMode);
                 HighScorePanel.saveScore(record);
             }
@@ -846,6 +865,7 @@ public class GamePanel extends JPanel {
         btnPrompt.setEnabled(false);
         btnReset.setEnabled(false);
         btnRestart.setEnabled(false);
+        btnGiveUp.setEnabled(false);
 
         int opt = JOptionPane.showConfirmDialog(this,
             "时间到！是否重试当前关卡？",
@@ -912,11 +932,11 @@ public class GamePanel extends JPanel {
             if (m_nRemainTime <= 15) {
                 lblTime.setForeground(Color.RED);
             } else {
-                lblTime.setForeground(Color.BLACK);
+                lblTime.setForeground(m_themeLabelColor);
             }
         } else {
             lblTime.setText("时间: --");
-            lblTime.setForeground(Color.BLACK);
+            lblTime.setForeground(m_themeLabelColor);
         }
     }
 
@@ -967,15 +987,59 @@ public class GamePanel extends JPanel {
             "7. 暂停：暂停游戏，普通模式暂停时倒计时停止。"
         );
         text.setEditable(false);
-        text.setFont(new Font("微软雅黑", Font.PLAIN, 14));
+        text.setFont(new Font("宋体", Font.PLAIN, 16));
         text.setMargin(new Insets(10, 10, 10, 10));
         dlg.add(new JScrollPane(text), BorderLayout.CENTER);
         JButton close = new JButton("关闭");
+        close.setFont(new Font("宋体", Font.PLAIN, 14));
         close.addActionListener(e -> dlg.dispose());
         JPanel bp = new JPanel();
         bp.add(close);
         dlg.add(bp, BorderLayout.SOUTH);
         dlg.setVisible(true);
+    }
+
+    private void giveUpGame() {
+        if (!m_bPlaying) return;
+        int opt = JOptionPane.showConfirmDialog(this,
+            "确定要放弃当前游戏吗？", "放弃游戏", JOptionPane.YES_NO_OPTION);
+        if (opt == JOptionPane.YES_OPTION) {
+            m_bPlaying = false;
+            stopCountdown();
+            AudioManager.stopBgm();
+            
+            btnStart.setEnabled(true);
+            btnPause.setEnabled(false);
+            btnPrompt.setEnabled(false);
+            btnReset.setEnabled(false);
+            btnRestart.setEnabled(false);
+            btnGiveUp.setEnabled(false);
+
+            if (m_nGameMode == MODE_STAGE || m_nGameMode == MODE_BASIC) {
+                m_nScore += (int) (m_nRemainTime * 10 + m_nClearCount * 5);
+            }
+
+            updateLabels();
+
+            String scoreDisplay = m_nGameMode == MODE_ENDLESS ? m_bigScore.toString() : String.valueOf(m_nScore);
+            if (HighScorePanel.isHighScore(m_nGameMode == MODE_ENDLESS ? m_bigScore : BigInteger.valueOf(m_nScore), m_nGameMode)) {
+                String name = JOptionPane.showInputDialog(this,
+                    "恭喜！你的分数 " + scoreDisplay + " 进入排行榜，请输入姓名：");
+                if (name != null && !name.trim().isEmpty()) {
+                    String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+                    ScoreRecord record = new ScoreRecord(name.trim(), 
+                        m_nGameMode == MODE_ENDLESS ? m_bigScore : BigInteger.valueOf(m_nScore),
+                        0,
+                        m_nLevel, date, m_nGameMode);
+                    HighScorePanel.saveScore(record);
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "游戏结束！得分: " + scoreDisplay);
+            }
+
+            deleteSaveFile();
+            mainFrame.showMainPanel();
+        }
     }
 
     private void backToMain() {
@@ -1085,7 +1149,7 @@ public class GamePanel extends JPanel {
     private JButton createButton(String text, int x, int y, int w, int h) {
         JButton btn = new JButton(text);
         btn.setBounds(x, y, w, h);
-        btn.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        btn.setFont(new Font("黑体", Font.PLAIN, 14));
         return btn;
     }
 }

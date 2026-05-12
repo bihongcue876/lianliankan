@@ -23,14 +23,14 @@ public class LevelSelectPanel extends JPanel {
 
         int btnW = 120;
         int btnH = 50;
-        int gapX = 150;
-        int startX = 400 - btnW - gapX / 2;
-        int btnY = 250;
+        int gapX = 200;
+        int centerX = 400 - btnW / 2;
+        int btnY = 320;
         
-        btnLevel1 = createLevelButton("关卡 1", startX, btnY, btnW, btnH);
-        btnLevel2 = createLevelButton("关卡 2", startX + gapX, btnY, btnW, btnH);
-        btnLevel3 = createLevelButton("关卡 3", startX + gapX * 2, btnY, btnW, btnH);
-        btnBack = createButton("返回", 400 - btnW / 2, btnY + 100, btnW, btnH);
+        btnLevel1 = createLevelButton("关卡 1", centerX - gapX, btnY, btnW, btnH);
+        btnLevel2 = createLevelButton("关卡 2", centerX, btnY, btnW, btnH);
+        btnLevel3 = createLevelButton("关卡 3", centerX + gapX, btnY, btnW, btnH);
+        btnBack = createButton("返回", 400 - btnW / 2, 500, btnW, btnH);
 
         btnLevel1.addActionListener(e -> startLevel(1));
         btnLevel2.addActionListener(e -> startLevel(2));
@@ -50,14 +50,14 @@ public class LevelSelectPanel extends JPanel {
     private JButton createLevelButton(String text, int x, int y, int w, int h) {
         JButton btn = new JButton(text);
         btn.setBounds(x, y, w, h);
-        btn.setFont(new Font("微软雅黑", Font.BOLD, 16));
+        btn.setFont(new Font("宋体", Font.BOLD, 16));
         return btn;
     }
 
     private JButton createButton(String text, int x, int y, int w, int h) {
         JButton btn = new JButton(text);
         btn.setBounds(x, y, w, h);
-        btn.setFont(new Font("微软雅黑", Font.PLAIN, 14));
+        btn.setFont(new Font("宋体", Font.PLAIN, 14));
         return btn;
     }
 

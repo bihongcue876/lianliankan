@@ -27,9 +27,9 @@ public class MainPanel extends JPanel {
         setLayout(null);
         bgImage = ImageUtils.loadImage(ResourcePath.MAIN_BG);
 
-        btnBasic = createButton("普通模式", 50, 180, 150, 45);
-        btnEndless = createButton("休闲模式", 50, 250, 150, 45);
-        btnStage = createButton("关卡模式", 50, 320, 150, 45);
+        btnBasic = createButton("普通模式", 15, 230, 120, 45);
+        btnEndless = createButton("休闲模式", 15, 340, 120, 45);
+        btnStage = createButton("关卡模式", 15, 450, 120, 45);
         btnContinue = createButton("继续游戏", 650, 320, 100, 35);
         btnHelp = createButton("帮助", 650, 365, 100, 35);
         btnRank = createButton("排行榜", 650, 410, 100, 35);
@@ -63,18 +63,31 @@ public class MainPanel extends JPanel {
             return;
         }
         JDialog dlg = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "选择存档", true);
-        dlg.setSize(300, 200);
+        dlg.setSize(300, 250);
         dlg.setLocationRelativeTo(this);
         dlg.setLayout(new BorderLayout());
 
         String[] modes = {"基本模式", "休闲模式", "关卡模式"};
         JList<String> list = new JList<>(modes);
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        list.setFont(new Font("宋体", Font.PLAIN, 16));
+        list.setFixedCellHeight(40);
+        list.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                label.setHorizontalAlignment(SwingConstants.CENTER);
+                label.setFont(new Font("宋体", Font.PLAIN, 16));
+                return label;
+            }
+        });
         dlg.add(new JScrollPane(list), BorderLayout.CENTER);
 
         JPanel btnPanel = new JPanel();
         JButton ok = new JButton("确定");
         JButton cancel = new JButton("取消");
+        ok.setFont(new Font("宋体", Font.PLAIN, 14));
+        cancel.setFont(new Font("宋体", Font.PLAIN, 14));
         ok.addActionListener(e -> {
             int idx = list.getSelectedIndex();
             if (idx >= 0) {
@@ -109,10 +122,11 @@ public class MainPanel extends JPanel {
             "7. 暂停：暂停游戏，普通模式暂停时倒计时停止。"
         );
         text.setEditable(false);
-        text.setFont(new Font("微软雅黑", Font.PLAIN, 14));
+        text.setFont(new Font("宋体", Font.PLAIN, 16));
         text.setMargin(new Insets(10, 10, 10, 10));
         dlg.add(new JScrollPane(text), BorderLayout.CENTER);
         JButton close = new JButton("关闭");
+        close.setFont(new Font("宋体", Font.PLAIN, 14));
         close.addActionListener(e -> dlg.dispose());
         JPanel bp = new JPanel();
         bp.add(close);
@@ -134,23 +148,31 @@ public class MainPanel extends JPanel {
         SettingsState currentSettings = loadSettings();
 
         JPanel themePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        themePanel.add(new JLabel("主题："));
+        JLabel themeLabel = new JLabel("主题：");
+        themeLabel.setFont(new Font("宋体", Font.PLAIN, 14));
+        themePanel.add(themeLabel);
         JComboBox<String> themeCombo = new JComboBox<>(new String[]{"水果", "CXK", "怪物猎人"});
+        themeCombo.setFont(new Font("宋体", Font.PLAIN, 14));
         themeCombo.setSelectedIndex(currentSettings.getThemeIndex());
         themePanel.add(themeCombo);
 
         JPanel volumePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        volumePanel.add(new JLabel("音量："));
+        JLabel volumeLabel = new JLabel("音量：");
+        volumeLabel.setFont(new Font("宋体", Font.PLAIN, 14));
+        volumePanel.add(volumeLabel);
         JSlider volumeSlider = new JSlider(0, 100, currentSettings.getVolume());
         volumeSlider.setPreferredSize(new Dimension(150, 30));
         volumePanel.add(volumeSlider);
-        JLabel volumeLabel = new JLabel(currentSettings.getVolume() + "%");
-        volumePanel.add(volumeLabel);
-        volumeSlider.addChangeListener(e -> volumeLabel.setText(volumeSlider.getValue() + "%"));
+        JLabel volumeValueLabel = new JLabel(currentSettings.getVolume() + "%");
+        volumeValueLabel.setFont(new Font("宋体", Font.PLAIN, 14));
+        volumePanel.add(volumeValueLabel);
+        volumeSlider.addChangeListener(e -> volumeValueLabel.setText(volumeSlider.getValue() + "%"));
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton saveBtn = new JButton("保存");
         JButton cancelBtn = new JButton("取消");
+        saveBtn.setFont(new Font("宋体", Font.PLAIN, 14));
+        cancelBtn.setFont(new Font("宋体", Font.PLAIN, 14));
         saveBtn.addActionListener(e -> {
             SettingsState settings = new SettingsState(themeCombo.getSelectedIndex(), volumeSlider.getValue());
             saveSettings(settings);
