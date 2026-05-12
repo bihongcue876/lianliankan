@@ -59,6 +59,7 @@ public class GamePanel extends JPanel {
     private String m_strCurrentTheme = "fruit";
     private int m_nThemeType = 0;
     private Color m_themeLabelColor = new Color(0, 0, 139);
+    private int m_themeLabelFontSize = 14;
 
     private JButton btnStart;
     private JButton btnPause;
@@ -118,9 +119,9 @@ public class GamePanel extends JPanel {
         btnBack = createButton("返回", 650, 520, 100, 35);
 
         lblTitle = new JLabel("欢乐连连看");
-        lblTitle.setBounds(650, 10, 100, 25);
+        lblTitle.setBounds(200, 10, 200, 30);
         lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
-        lblTitle.setFont(new Font("隶书", Font.BOLD, 14));
+        lblTitle.setFont(new Font("隶书", Font.BOLD, 20));
 
         lblScore = new JLabel("分数: 0");
         lblScore.setBounds(650, 365, 100, 25);
@@ -195,8 +196,13 @@ public class GamePanel extends JPanel {
         }
         if ("fruit".equals(theme)) {
             m_themeLabelColor = new Color(0, 0, 139);
+            m_themeLabelFontSize = 14;
+        } else if ("mh".equals(theme)) {
+            m_themeLabelColor = Color.WHITE;
+            m_themeLabelFontSize = 18;
         } else {
             m_themeLabelColor = Color.BLACK;
+            m_themeLabelFontSize = 14;
         }
     }
 
@@ -451,6 +457,12 @@ public class GamePanel extends JPanel {
         lblScore.setForeground(m_themeLabelColor);
         lblCombo.setForeground(m_themeLabelColor);
         lblLevel.setForeground(m_themeLabelColor);
+        lblTitle.setForeground(m_themeLabelColor);
+
+        lblScore.setFont(new Font("黑体", Font.BOLD, m_themeLabelFontSize));
+        lblCombo.setFont(new Font("黑体", Font.BOLD, m_themeLabelFontSize));
+        lblTime.setFont(new Font("黑体", Font.BOLD, m_themeLabelFontSize));
+        lblLevel.setFont(new Font("黑体", Font.BOLD, m_themeLabelFontSize));
 
         updateLabels();
         repaint();
