@@ -1,0 +1,6 @@
+straight_link.png 直线连接示意图
+one_corner_link.png 一个拐角连接示意图
+two_corner_link.png 两个拐角连接示意图
+level_select.png 关卡选择界面截图
+main_interface.png 主界面截图
+game_interface.png 游戏界面截图

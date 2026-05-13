@@ -1,8 +1,10 @@
 package com.lianliankan.ui;
 
+import com.lianliankan.audio.AudioManager;
 import com.lianliankan.model.SettingsState;
 import com.lianliankan.util.ImageUtils;
 import com.lianliankan.util.ResourcePath;
+import com.lianliankan.util.UIUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -27,14 +29,14 @@ public class MainPanel extends JPanel {
         setLayout(null);
         bgImage = ImageUtils.loadImage(ResourcePath.MAIN_BG);
 
-        btnBasic = createButton("普通模式", 15, 230, 120, 45);
-        btnEndless = createButton("休闲模式", 15, 340, 120, 45);
-        btnStage = createButton("关卡模式", 15, 450, 120, 45);
-        btnContinue = createButton("继续游戏", 650, 320, 100, 35);
-        btnHelp = createButton("帮助", 650, 365, 100, 35);
-        btnRank = createButton("排行榜", 650, 410, 100, 35);
-        btnSettings = createButton("设置", 650, 455, 100, 35);
-        btnExit = createButton("退出游戏", 650, 500, 100, 35);
+        btnBasic = UIUtils.createButton("普通模式", 15, 230, 120, 45);
+        btnEndless = UIUtils.createButton("休闲模式", 15, 340, 120, 45);
+        btnStage = UIUtils.createButton("关卡模式", 15, 450, 120, 45);
+        btnContinue = UIUtils.createButton("继续游戏", 650, 320, 100, 35);
+        btnHelp = UIUtils.createButton("帮助", 650, 365, 100, 35);
+        btnRank = UIUtils.createButton("排行榜", 650, 410, 100, 35);
+        btnSettings = UIUtils.createButton("设置", 650, 455, 100, 35);
+        btnExit = UIUtils.createButton("退出游戏", 650, 500, 100, 35);
 
         btnBasic.addActionListener(e -> mainFrame.showGamePanel(0));
         btnEndless.addActionListener(e -> mainFrame.showGamePanel(1));
@@ -62,13 +64,30 @@ public class MainPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "没有找到存档");
             return;
         }
+        
+        java.util.List<String> availableModes = new java.util.ArrayList<>();
+        java.util.List<Integer> availableModeIndices = new java.util.ArrayList<>();
+        String[] modeNames = {"普通模式", "休闲模式", "关卡模式"};
+        
+        for (int i = 0; i < 3; i++) {
+            String saveFile = ResourcePath.getSaveFile(i);
+            if (ResourcePath.exists(saveFile)) {
+                availableModes.add(modeNames[i]);
+                availableModeIndices.add(i);
+            }
+        }
+        
+        if (availableModes.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "没有找到存档");
+            return;
+        }
+        
         JDialog dlg = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "选择存档", true);
         dlg.setSize(300, 250);
         dlg.setLocationRelativeTo(this);
         dlg.setLayout(new BorderLayout());
 
-        String[] modes = {"基本模式", "休闲模式", "关卡模式"};
-        JList<String> list = new JList<>(modes);
+        JList<String> list = new JList<>(availableModes.toArray(new String[0]));
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         list.setFont(new Font("宋体", Font.PLAIN, 16));
         list.setFixedCellHeight(40);
@@ -91,12 +110,8 @@ public class MainPanel extends JPanel {
         ok.addActionListener(e -> {
             int idx = list.getSelectedIndex();
             if (idx >= 0) {
-                String saveFile = ResourcePath.getSaveFile(idx);
-                if (ResourcePath.exists(saveFile)) {
-                    mainFrame.showGamePanel(idx);
-                } else {
-                    JOptionPane.showMessageDialog(dlg, "该模式没有存档");
-                }
+                int modeIndex = availableModeIndices.get(idx);
+                mainFrame.showGamePanel(modeIndex);
             }
             dlg.dispose();
         });
@@ -108,30 +123,7 @@ public class MainPanel extends JPanel {
     }
 
     private void showHelp() {
-        JDialog dlg = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "游戏规则", true);
-        dlg.setSize(500, 400);
-        dlg.setLocationRelativeTo(this);
-        JTextArea text = new JTextArea(
-            "欢乐连连看游戏规则\n\n" +
-            "1. 点击两张相同的图片，如果它们可以通过不超过2个拐角的路径连接，则消除。\n" +
-            "2. 基本模式：不限时，消除一对+10分，无连击。\n" +
-            "3. 休闲模式（无尽）：不限时，消除一对+10分，2秒内连续消除触发连击（分数翻倍）。\n" +
-            "4. 关卡模式：限时，共20关，难度递增，通关得分=剩余秒数×10+消除对数×5。\n" +
-            "5. 提示：找到一对可消除的图片，普通模式扣10秒，无尽模式中断连击。\n" +
-            "6. 重排：重新排列剩余图片，普通模式扣15秒，无尽模式扣5分。\n" +
-            "7. 暂停：暂停游戏，普通模式暂停时倒计时停止。"
-        );
-        text.setEditable(false);
-        text.setFont(new Font("宋体", Font.PLAIN, 16));
-        text.setMargin(new Insets(10, 10, 10, 10));
-        dlg.add(new JScrollPane(text), BorderLayout.CENTER);
-        JButton close = new JButton("关闭");
-        close.setFont(new Font("宋体", Font.PLAIN, 14));
-        close.addActionListener(e -> dlg.dispose());
-        JPanel bp = new JPanel();
-        bp.add(close);
-        dlg.add(bp, BorderLayout.SOUTH);
-        dlg.setVisible(true);
+        new HelpDialog((Frame) SwingUtilities.getWindowAncestor(this)).setVisible(true);
     }
 
     private void showRank() {
@@ -140,9 +132,9 @@ public class MainPanel extends JPanel {
 
     private void showSettings() {
         JDialog dlg = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "设置", true);
-        dlg.setSize(350, 200);
+        dlg.setSize(380, 250);
         dlg.setLocationRelativeTo(this);
-        JPanel contentPanel = new JPanel(new GridLayout(3, 1, 0, 10));
+        JPanel contentPanel = new JPanel(new GridLayout(4, 1, 0, 8));
         contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         SettingsState currentSettings = loadSettings();
@@ -156,17 +148,29 @@ public class MainPanel extends JPanel {
         themeCombo.setSelectedIndex(currentSettings.getThemeIndex());
         themePanel.add(themeCombo);
 
-        JPanel volumePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JLabel volumeLabel = new JLabel("音量：");
-        volumeLabel.setFont(new Font("宋体", Font.PLAIN, 14));
-        volumePanel.add(volumeLabel);
-        JSlider volumeSlider = new JSlider(0, 100, currentSettings.getVolume());
-        volumeSlider.setPreferredSize(new Dimension(150, 30));
-        volumePanel.add(volumeSlider);
-        JLabel volumeValueLabel = new JLabel(currentSettings.getVolume() + "%");
-        volumeValueLabel.setFont(new Font("宋体", Font.PLAIN, 14));
-        volumePanel.add(volumeValueLabel);
-        volumeSlider.addChangeListener(e -> volumeValueLabel.setText(volumeSlider.getValue() + "%"));
+        JPanel bgmVolumePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel bgmVolumeLabel = new JLabel("背景音乐：");
+        bgmVolumeLabel.setFont(new Font("宋体", Font.PLAIN, 14));
+        bgmVolumePanel.add(bgmVolumeLabel);
+        JSlider bgmVolumeSlider = new JSlider(0, 100, currentSettings.getBgmVolume());
+        bgmVolumeSlider.setPreferredSize(new Dimension(150, 30));
+        bgmVolumePanel.add(bgmVolumeSlider);
+        JLabel bgmVolumeValueLabel = new JLabel(currentSettings.getBgmVolume() + "%");
+        bgmVolumeValueLabel.setFont(new Font("宋体", Font.PLAIN, 14));
+        bgmVolumePanel.add(bgmVolumeValueLabel);
+        bgmVolumeSlider.addChangeListener(e -> bgmVolumeValueLabel.setText(bgmVolumeSlider.getValue() + "%"));
+
+        JPanel sfxVolumePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel sfxVolumeLabel = new JLabel("音效：    ");
+        sfxVolumeLabel.setFont(new Font("宋体", Font.PLAIN, 14));
+        sfxVolumePanel.add(sfxVolumeLabel);
+        JSlider sfxVolumeSlider = new JSlider(0, 100, currentSettings.getSfxVolume());
+        sfxVolumeSlider.setPreferredSize(new Dimension(150, 30));
+        sfxVolumePanel.add(sfxVolumeSlider);
+        JLabel sfxVolumeValueLabel = new JLabel(currentSettings.getSfxVolume() + "%");
+        sfxVolumeValueLabel.setFont(new Font("宋体", Font.PLAIN, 14));
+        sfxVolumePanel.add(sfxVolumeValueLabel);
+        sfxVolumeSlider.addChangeListener(e -> sfxVolumeValueLabel.setText(sfxVolumeSlider.getValue() + "%"));
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton saveBtn = new JButton("保存");
@@ -174,8 +178,16 @@ public class MainPanel extends JPanel {
         saveBtn.setFont(new Font("宋体", Font.PLAIN, 14));
         cancelBtn.setFont(new Font("宋体", Font.PLAIN, 14));
         saveBtn.addActionListener(e -> {
-            SettingsState settings = new SettingsState(themeCombo.getSelectedIndex(), volumeSlider.getValue());
+            SettingsState settings = new SettingsState(
+                themeCombo.getSelectedIndex(), 
+                bgmVolumeSlider.getValue(),
+                sfxVolumeSlider.getValue()
+            );
             saveSettings(settings);
+            AudioManager.setBgmVolume(settings.getBgmVolume());
+            AudioManager.setSfxVolume(settings.getSfxVolume());
+            String[] themes = {"fruit", "cxk", "mh"};
+            AudioManager.setTheme(themes[settings.getThemeIndex()]);
             dlg.dispose();
         });
         cancelBtn.addActionListener(e -> dlg.dispose());
@@ -183,7 +195,8 @@ public class MainPanel extends JPanel {
         btnPanel.add(cancelBtn);
 
         contentPanel.add(themePanel);
-        contentPanel.add(volumePanel);
+        contentPanel.add(bgmVolumePanel);
+        contentPanel.add(sfxVolumePanel);
         contentPanel.add(btnPanel);
         dlg.add(contentPanel);
         dlg.setVisible(true);
@@ -199,7 +212,7 @@ public class MainPanel extends JPanel {
                 e.printStackTrace();
             }
         }
-        return new SettingsState(0, 80);
+        return new SettingsState(0, 80, 80);
     }
 
     private void saveSettings(SettingsState settings) {
@@ -217,13 +230,6 @@ public class MainPanel extends JPanel {
 
     public void refreshContinueButton() {
         btnContinue.setEnabled(ResourcePath.hasAnySaveFile());
-    }
-
-    private JButton createButton(String text, int x, int y, int w, int h) {
-        JButton btn = new JButton(text);
-        btn.setBounds(x, y, w, h);
-        btn.setFont(new Font("微软雅黑", Font.PLAIN, 14));
-        return btn;
     }
 
     @Override

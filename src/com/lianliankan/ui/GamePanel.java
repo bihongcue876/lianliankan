@@ -7,6 +7,7 @@ import com.lianliankan.model.GameState;
 import com.lianliankan.model.ScoreRecord;
 import com.lianliankan.util.ImageUtils;
 import com.lianliankan.util.ResourcePath;
+import com.lianliankan.util.UIUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -34,8 +35,8 @@ public class GamePanel extends JPanel {
     private Vertex m_svSelFst;
     private Vertex m_svSelSec;
     private boolean m_bFirstPoint = true;
-    private boolean m_bPlaying = false;
-    private boolean m_bPaused = false;
+    private volatile boolean m_bPlaying = false;
+    private volatile boolean m_bPaused = false;
 
     private List<Vertex> linkPath = new ArrayList<>();
     private Vertex[] hintPath = null;
@@ -69,6 +70,7 @@ public class GamePanel extends JPanel {
     private JButton btnBack;
     private JButton btnRestart;
     private JButton btnGiveUp;
+    private JButton btnSettings;
 
     private JLabel lblScore;
     private JLabel lblCombo;
@@ -109,14 +111,15 @@ public class GamePanel extends JPanel {
 
         loadTheme("fruit");
 
-        btnStart = createButton("开始游戏", 650, 50, 100, 35);
-        btnPause = createButton("暂停", 650, 95, 100, 35);
-        btnPrompt = createButton("提示", 650, 140, 100, 35);
-        btnReset = createButton("重排", 650, 185, 100, 35);
-        btnRestart = createButton("重新开始", 650, 230, 100, 35);
-        btnHelp = createButton("帮助", 650, 275, 100, 35);
-        btnGiveUp = createButton("放弃游戏", 650, 320, 100, 35);
-        btnBack = createButton("返回", 650, 520, 100, 35);
+        btnStart = UIUtils.createButton("开始游戏", 650, 50, 100, 35);
+        btnPause = UIUtils.createButton("暂停", 650, 95, 100, 35);
+        btnPrompt = UIUtils.createButton("提示", 650, 140, 100, 35);
+        btnReset = UIUtils.createButton("重排", 650, 185, 100, 35);
+        btnRestart = UIUtils.createButton("重新开始", 650, 230, 100, 35);
+        btnHelp = UIUtils.createButton("帮助", 650, 275, 100, 35);
+        btnGiveUp = UIUtils.createButton("放弃游戏", 650, 320, 100, 35);
+        btnSettings = UIUtils.createButton("设置", 650, 365, 100, 35);
+        btnBack = UIUtils.createButton("返回", 650, 520, 100, 35);
 
         lblTitle = new JLabel("欢乐连连看");
         lblTitle.setBounds(200, 10, 200, 30);
@@ -124,22 +127,22 @@ public class GamePanel extends JPanel {
         lblTitle.setFont(new Font("隶书", Font.BOLD, 20));
 
         lblScore = new JLabel("分数: 0");
-        lblScore.setBounds(650, 365, 100, 25);
+        lblScore.setBounds(650, 410, 100, 25);
         lblScore.setHorizontalAlignment(SwingConstants.CENTER);
         lblScore.setFont(new Font("黑体", Font.BOLD, 14));
 
         lblCombo = new JLabel("连击: 0");
-        lblCombo.setBounds(650, 395, 100, 25);
+        lblCombo.setBounds(650, 440, 100, 25);
         lblCombo.setHorizontalAlignment(SwingConstants.CENTER);
         lblCombo.setFont(new Font("黑体", Font.BOLD, 14));
 
         lblTime = new JLabel("时间: --");
-        lblTime.setBounds(650, 425, 100, 25);
+        lblTime.setBounds(650, 470, 100, 25);
         lblTime.setHorizontalAlignment(SwingConstants.CENTER);
         lblTime.setFont(new Font("黑体", Font.BOLD, 14));
 
         lblLevel = new JLabel("关卡: 1");
-        lblLevel.setBounds(650, 455, 100, 25);
+        lblLevel.setBounds(650, 500, 100, 25);
         lblLevel.setHorizontalAlignment(SwingConstants.CENTER);
         lblLevel.setFont(new Font("黑体", Font.BOLD, 14));
 
@@ -155,6 +158,7 @@ public class GamePanel extends JPanel {
         btnRestart.addActionListener(e -> restartGame());
         btnHelp.addActionListener(e -> showHelp());
         btnGiveUp.addActionListener(e -> giveUpGame());
+        btnSettings.addActionListener(e -> showGameSettings());
         btnBack.addActionListener(e -> backToMain());
 
         btnPause.setEnabled(false);
@@ -162,6 +166,7 @@ public class GamePanel extends JPanel {
         btnReset.setEnabled(false);
         btnRestart.setEnabled(false);
         btnGiveUp.setEnabled(false);
+        btnSettings.setEnabled(false);
 
         add(btnStart);
         add(btnPause);
@@ -170,6 +175,7 @@ public class GamePanel extends JPanel {
         add(btnRestart);
         add(btnHelp);
         add(btnGiveUp);
+        add(btnSettings);
         add(btnBack);
         add(lblTitle);
         add(lblScore);
@@ -365,7 +371,7 @@ public class GamePanel extends JPanel {
         m_nCombo = 0;
         m_nMaxCombo = 0;
         m_nClearCount = 0;
-        lblTitle.setText("普通模式 Stage " + stage);
+        lblTitle.setText("阶段 " + stage + " - 普通模式");
         updateLabels();
     }
 
@@ -409,7 +415,7 @@ public class GamePanel extends JPanel {
         int[] params = STAGE_PARAMS[m_nStage - 1];
         m_nCurrentRows = params[0];
         m_nCurrentCols = params[1];
-        m_nCurrentPicNum = params[2];
+        m_nCurrentPicNum = 8;
         
         int totalCells = m_nCurrentRows * m_nCurrentCols;
         m_nRemainTime = 150 + (totalCells - 80) * 11 / 8;
@@ -453,6 +459,7 @@ public class GamePanel extends JPanel {
         btnReset.setEnabled(true);
         btnRestart.setEnabled(true);
         btnGiveUp.setEnabled(true);
+        btnSettings.setEnabled(true);
 
         lblScore.setForeground(m_themeLabelColor);
         lblCombo.setForeground(m_themeLabelColor);
@@ -791,7 +798,7 @@ public class GamePanel extends JPanel {
                 startCountdown();
             }
         } else if (m_nGameMode == MODE_BASIC) {
-            if (m_nLevel >= 20) {
+            if (m_nLevel >= 5) {
                 gameCompleted();
             } else {
                 JOptionPane.showMessageDialog(this,
@@ -844,6 +851,7 @@ public class GamePanel extends JPanel {
         btnReset.setEnabled(false);
         btnRestart.setEnabled(false);
         btnGiveUp.setEnabled(false);
+        btnSettings.setEnabled(false);
 
         if (m_nGameMode == MODE_STAGE || m_nGameMode == MODE_BASIC) {
             m_nScore += (int) (m_nRemainTime * 10 + m_nClearCount * 5);
@@ -878,6 +886,7 @@ public class GamePanel extends JPanel {
         btnReset.setEnabled(false);
         btnRestart.setEnabled(false);
         btnGiveUp.setEnabled(false);
+        btnSettings.setEnabled(false);
 
         int opt = JOptionPane.showConfirmDialog(this,
             "时间到！是否重试当前关卡？",
@@ -932,8 +941,10 @@ public class GamePanel extends JPanel {
         lblCombo.setText(comboText);
         if (m_nGameMode == MODE_STAGE) {
             lblLevel.setText("关卡" + m_nLevel + "-" + m_nStage);
-        } else {
+        } else if (m_nGameMode == MODE_ENDLESS) {
             lblLevel.setText("关卡: " + m_nLevel);
+        } else {
+            lblLevel.setText("");
         }
         updateTimeLabel();
     }
@@ -985,30 +996,66 @@ public class GamePanel extends JPanel {
     }
 
     private void showHelp() {
-        JDialog dlg = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "游戏规则", true);
-        dlg.setSize(500, 400);
+        new HelpDialog((Frame) SwingUtilities.getWindowAncestor(this)).setVisible(true);
+    }
+
+    private void showGameSettings() {
+        boolean wasRunning = countdownTimer != null && countdownTimer.isRunning();
+        if (wasRunning) {
+            countdownTimer.stop();
+        }
+        
+        JDialog dlg = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "设置", true);
+        dlg.setSize(350, 200);
         dlg.setLocationRelativeTo(this);
-        JTextArea text = new JTextArea(
-            "欢乐连连看游戏规则\n\n" +
-            "1. 点击两张相同的图片，如果它们可以通过不超过2个拐角的路径连接，则消除。\n" +
-            "2. 基本模式：不限时，消除一对+10分，无连击。\n" +
-            "3. 休闲模式（无尽）：不限时，消除一对+10分，2秒内连续消除触发连击（分数翻倍）。\n" +
-            "4. 关卡模式：限时，共20关，难度递增，通关得分=剩余秒数×10+消除对数×5。\n" +
-            "5. 提示：找到一对可消除的图片，普通模式扣10秒，无尽模式中断连击。\n" +
-            "6. 重排：重新排列剩余图片，普通模式扣15秒，无尽模式扣5分。\n" +
-            "7. 暂停：暂停游戏，普通模式暂停时倒计时停止。"
-        );
-        text.setEditable(false);
-        text.setFont(new Font("宋体", Font.PLAIN, 16));
-        text.setMargin(new Insets(10, 10, 10, 10));
-        dlg.add(new JScrollPane(text), BorderLayout.CENTER);
-        JButton close = new JButton("关闭");
-        close.setFont(new Font("宋体", Font.PLAIN, 14));
-        close.addActionListener(e -> dlg.dispose());
-        JPanel bp = new JPanel();
-        bp.add(close);
-        dlg.add(bp, BorderLayout.SOUTH);
+        JPanel contentPanel = new JPanel(new GridLayout(3, 1, 0, 10));
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JPanel bgmVolumePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel bgmVolumeLabel = new JLabel("背景音乐：");
+        bgmVolumeLabel.setFont(new Font("宋体", Font.PLAIN, 14));
+        bgmVolumePanel.add(bgmVolumeLabel);
+        JSlider bgmVolumeSlider = new JSlider(0, 100, AudioManager.getBgmVolume());
+        bgmVolumeSlider.setPreferredSize(new Dimension(150, 30));
+        bgmVolumePanel.add(bgmVolumeSlider);
+        JLabel bgmVolumeValueLabel = new JLabel(AudioManager.getBgmVolume() + "%");
+        bgmVolumeValueLabel.setFont(new Font("宋体", Font.PLAIN, 14));
+        bgmVolumePanel.add(bgmVolumeValueLabel);
+        bgmVolumeSlider.addChangeListener(e -> {
+            bgmVolumeValueLabel.setText(bgmVolumeSlider.getValue() + "%");
+            AudioManager.setBgmVolume(bgmVolumeSlider.getValue());
+        });
+
+        JPanel sfxVolumePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel sfxVolumeLabel = new JLabel("音效：    ");
+        sfxVolumeLabel.setFont(new Font("宋体", Font.PLAIN, 14));
+        sfxVolumePanel.add(sfxVolumeLabel);
+        JSlider sfxVolumeSlider = new JSlider(0, 100, AudioManager.getSfxVolume());
+        sfxVolumeSlider.setPreferredSize(new Dimension(150, 30));
+        sfxVolumePanel.add(sfxVolumeSlider);
+        JLabel sfxVolumeValueLabel = new JLabel(AudioManager.getSfxVolume() + "%");
+        sfxVolumeValueLabel.setFont(new Font("宋体", Font.PLAIN, 14));
+        sfxVolumePanel.add(sfxVolumeValueLabel);
+        sfxVolumeSlider.addChangeListener(e -> {
+            sfxVolumeValueLabel.setText(sfxVolumeSlider.getValue() + "%");
+            AudioManager.setSfxVolume(sfxVolumeSlider.getValue());
+        });
+
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton closeBtn = new JButton("关闭");
+        closeBtn.setFont(new Font("宋体", Font.PLAIN, 14));
+        closeBtn.addActionListener(e -> dlg.dispose());
+        btnPanel.add(closeBtn);
+
+        contentPanel.add(bgmVolumePanel);
+        contentPanel.add(sfxVolumePanel);
+        contentPanel.add(btnPanel);
+        dlg.add(contentPanel);
         dlg.setVisible(true);
+        
+        if (wasRunning) {
+            countdownTimer.start();
+        }
     }
 
     private void giveUpGame() {
@@ -1026,6 +1073,7 @@ public class GamePanel extends JPanel {
             btnReset.setEnabled(false);
             btnRestart.setEnabled(false);
             btnGiveUp.setEnabled(false);
+            btnSettings.setEnabled(false);
 
             if (m_nGameMode == MODE_STAGE || m_nGameMode == MODE_BASIC) {
                 m_nScore += (int) (m_nRemainTime * 10 + m_nClearCount * 5);
@@ -1156,12 +1204,5 @@ public class GamePanel extends JPanel {
             int y2 = m_ptGameTop.y + p2.row * m_elemH + m_elemH / 2;
             g.drawLine(x1, y1, x2, y2);
         }
-    }
-
-    private JButton createButton(String text, int x, int y, int w, int h) {
-        JButton btn = new JButton(text);
-        btn.setBounds(x, y, w, h);
-        btn.setFont(new Font("黑体", Font.PLAIN, 14));
-        return btn;
     }
 }

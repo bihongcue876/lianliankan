@@ -1,5 +1,6 @@
 package com.lianliankan.ui;
 
+import com.lianliankan.model.GameState;
 import com.lianliankan.util.ResourcePath;
 
 import javax.swing.*;
@@ -108,17 +109,39 @@ public class MainFrame extends JFrame {
         gamePanel.setGameMode(mode);
         String saveFile = ResourcePath.getSaveFile(mode);
         if (ResourcePath.exists(saveFile)) {
-            int opt = JOptionPane.showConfirmDialog(this,
-                "检测到上次存档，是否继续？",
-                "继续游戏", JOptionPane.YES_NO_OPTION);
-            if (opt == JOptionPane.YES_OPTION) {
-                gamePanel.loadAndResume(saveFile);
-                cardLayout.show(mainContainer, "Game");
-                return;
+            int savedMode = readSaveMode(saveFile);
+            if (savedMode != mode && savedMode >= 0) {
+                String[] modeNames = {"普通模式", "休闲模式", "关卡模式"};
+                int opt = JOptionPane.showConfirmDialog(this,
+                    "检测到该存档实际是 " + modeNames[savedMode] + " 的进度。\n是否继续加载？",
+                    "存档模式不匹配", JOptionPane.YES_NO_OPTION);
+                if (opt == JOptionPane.YES_OPTION) {
+                    gamePanel.loadAndResume(saveFile);
+                    cardLayout.show(mainContainer, "Game");
+                    return;
+                }
+            } else {
+                int opt = JOptionPane.showConfirmDialog(this,
+                    "检测到上次存档，是否继续？",
+                    "继续游戏", JOptionPane.YES_NO_OPTION);
+                if (opt == JOptionPane.YES_OPTION) {
+                    gamePanel.loadAndResume(saveFile);
+                    cardLayout.show(mainContainer, "Game");
+                    return;
+                }
             }
         }
         if (gamePanel.startNewGame(mode)) {
             cardLayout.show(mainContainer, "Game");
+        }
+    }
+
+    private int readSaveMode(String saveFile) {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(saveFile))) {
+            GameState state = (GameState) ois.readObject();
+            return state.getMode();
+        } catch (Exception e) {
+            return -1;
         }
     }
 

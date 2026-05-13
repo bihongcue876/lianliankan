@@ -4,35 +4,41 @@ import com.lianliankan.model.SettingsState;
 import com.lianliankan.util.ResourcePath;
 
 import javax.sound.sampled.*;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
-import javazoom.jl.player.Player;
 
 public class AudioManager {
-    private static int volume = 80;
+    private static int bgmVolume = 80;
+    private static int sfxVolume = 80;
     private static String currentTheme = "fruit";
-    private static Clip bgmClip = null;
-    private static Player mp3Player = null;
-    private static Thread mp3Thread = null;
+    private static VolumeControlledPlayer bgmPlayer = null;
     private static boolean playing = false;
+    private static Thread bgmThread = null;
     
-    public static void setVolume(int vol) {
-        volume = vol;
-        if (bgmClip != null && bgmClip.isRunning()) {
-            FloatControl control = (FloatControl) bgmClip.getControl(FloatControl.Type.MASTER_GAIN);
-            float gain = volume / 100.0f;
-            float dB = (float) (Math.log(gain) / Math.log(10.0) * 20.0);
-            control.setValue(dB);
+    public static void setBgmVolume(int vol) {
+        bgmVolume = Math.max(0, Math.min(100, vol));
+        if (bgmPlayer != null) {
+            bgmPlayer.setVolume(bgmVolume / 100.0f);
         }
+    }
+    
+    public static void setSfxVolume(int vol) {
+        sfxVolume = Math.max(0, Math.min(100, vol));
     }
     
     public static void setTheme(String theme) {
         currentTheme = theme;
     }
     
-    public static int getVolume() {
-        return volume;
+    public static int getBgmVolume() {
+        return bgmVolume;
+    }
+    
+    public static int getSfxVolume() {
+        return sfxVolume;
     }
     
     public static void init() {
@@ -42,7 +48,8 @@ public class AudioManager {
                 ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file));
                 SettingsState settings = (SettingsState) ois.readObject();
                 ois.close();
-                volume = settings.getVolume();
+                bgmVolume = settings.getBgmVolume();
+                sfxVolume = settings.getSfxVolume();
                 String[] themes = {"fruit", "cxk", "mh"};
                 int themeIndex = settings.getThemeIndex();
                 if (themeIndex >= 0 && themeIndex < themes.length) {
@@ -72,39 +79,55 @@ public class AudioManager {
 
     public static void stopBgm() {
         playing = false;
-        if (bgmClip != null) {
-            bgmClip.stop();
-            bgmClip.close();
-            bgmClip = null;
+        if (bgmPlayer != null) {
+            bgmPlayer.stop();
+            bgmPlayer = null;
         }
-        if (mp3Player != null) {
-            mp3Player.close();
-            mp3Player = null;
-        }
-        if (mp3Thread != null && mp3Thread.isAlive()) {
-            mp3Thread.interrupt();
+        if (bgmThread != null && bgmThread.isAlive()) {
+            bgmThread.interrupt();
             try {
-                mp3Thread.join(500);
+                bgmThread.join(500);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
-            mp3Thread = null;
+            bgmThread = null;
         }
     }
     
     private static void playSound(String path) {
         try {
-            File file = new File(path);
-            if (!file.exists()) return;
+            InputStream is = null;
+            if (ResourcePath.isJarMode()) {
+                is = ResourcePath.getResourceAsStream(path);
+            } else {
+                File file = new File(path);
+                if (file.exists()) {
+                    is = new FileInputStream(file);
+                }
+            }
+            if (is == null) return;
             
-            AudioInputStream ais = AudioSystem.getAudioInputStream(file);
+            if (!(is instanceof BufferedInputStream)) {
+                is = new BufferedInputStream(is);
+            }
+            
+            AudioInputStream ais = AudioSystem.getAudioInputStream(is);
             Clip clip = AudioSystem.getClip();
             clip.open(ais);
             
-            FloatControl control = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
-            float gain = volume / 100.0f;
-            float dB = (float) (Math.log(Math.max(gain, 0.0001)) / Math.log(10.0) * 20.0);
-            control.setValue(dB);
+            if (clip.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
+                FloatControl control = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+                float gain = sfxVolume / 100.0f;
+                float dB = (float) (Math.log(Math.max(gain, 0.0001)) / Math.log(10.0) * 20.0);
+                dB = Math.max(control.getMinimum(), Math.min(control.getMaximum(), dB));
+                control.setValue(dB);
+            }
+            
+            clip.addLineListener(event -> {
+                if (event.getType() == LineEvent.Type.STOP) {
+                    clip.close();
+                }
+            });
             
             clip.start();
         } catch (Exception e) {
@@ -114,32 +137,43 @@ public class AudioManager {
     
     public static void playMainBgm() {
         stopBgm();
-        try {
-            File file = new File(ResourcePath.BGM);
-            if (!file.exists()) return;
-            
-            playing = true;
-            mp3Thread = new Thread(() -> {
-                while (playing) {
-                    try {
-                        FileInputStream fis = new FileInputStream(ResourcePath.BGM);
-                        mp3Player = new Player(fis);
-                        mp3Player.play();
-                        if (playing) {
-                            Thread.sleep(100);
+        playing = true;
+        bgmThread = new Thread(() -> {
+            while (playing) {
+                try {
+                    InputStream is = null;
+                    if (ResourcePath.isJarMode()) {
+                        is = ResourcePath.getResourceAsStream(ResourcePath.BGM);
+                    } else {
+                        File file = new File(ResourcePath.BGM);
+                        if (file.exists()) {
+                            is = new FileInputStream(file);
                         }
-                    } catch (Exception e) {
-                        if (!(e instanceof InterruptedException)) {
-                            e.printStackTrace();
-                        }
+                    }
+                    if (is == null) {
                         break;
                     }
+                    bgmPlayer = new VolumeControlledPlayer();
+                    bgmPlayer.setVolume(bgmVolume / 100.0f);
+                    bgmPlayer.play(is);
+                    
+                    while (playing && bgmPlayer.isPlaying()) {
+                        Thread.sleep(100);
+                    }
+                    
+                    if (bgmPlayer != null) {
+                        bgmPlayer.stop();
+                        bgmPlayer = null;
+                    }
+                } catch (Exception e) {
+                    if (!(e instanceof InterruptedException)) {
+                        e.printStackTrace();
+                    }
+                    break;
                 }
-            });
-            mp3Thread.setDaemon(true);
-            mp3Thread.start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            }
+        });
+        bgmThread.setDaemon(true);
+        bgmThread.start();
     }
 }

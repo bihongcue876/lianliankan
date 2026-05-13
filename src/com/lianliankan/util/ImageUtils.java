@@ -4,16 +4,33 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class ImageUtils {
     public static BufferedImage loadImage(String relativePath) {
+        if (ResourcePath.isJarMode()) {
+            return loadImageFromResource(relativePath);
+        }
         try {
             File file = new File(relativePath);
             if (!file.exists()) {
-                System.err.println("资源文件不存在: " + file.getAbsolutePath());
-                return null;
+                return loadImageFromResource(relativePath);
             }
             return ImageIO.read(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return loadImageFromResource(relativePath);
+        }
+    }
+
+    private static BufferedImage loadImageFromResource(String relativePath) {
+        try {
+            InputStream is = ResourcePath.getResourceAsStream(relativePath);
+            if (is == null) {
+                System.err.println("资源文件不存在: " + relativePath);
+                return null;
+            }
+            return ImageIO.read(is);
         } catch (IOException e) {
             e.printStackTrace();
             return null;

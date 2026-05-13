@@ -1,13 +1,21 @@
 package com.lianliankan.util;
 
 import java.io.File;
+import java.io.InputStream;
 
 public class ResourcePath {
     private static final String BASE_DIR;
+    private static final boolean RUNNING_FROM_JAR;
 
     static {
         String base = detectBaseDir();
         BASE_DIR = base;
+        RUNNING_FROM_JAR = isRunningFromJar();
+    }
+
+    private static boolean isRunningFromJar() {
+        String protocol = ResourcePath.class.getResource("").getProtocol();
+        return "jar".equals(protocol);
     }
 
     private static String detectBaseDir() {
@@ -26,13 +34,14 @@ public class ResourcePath {
     }
 
     private static String detectSaveDir() {
-        String baseForSave = BASE_DIR.contains("lianlk/") ? "lianlk/" : "";
-        String dirPath = baseForSave + "src/bak";
+        String userHome = System.getProperty("user.home");
+        String appName = ".lianliankan";
+        String dirPath = userHome + File.separator + appName;
         File dir = new File(dirPath);
         if (!dir.exists()) {
             dir.mkdirs();
         }
-        return dirPath.endsWith("/") ? dirPath : dirPath + "/";
+        return dirPath + File.separator;
     }
 
     public static final String PICTURE_DIR = BASE_DIR + "picture/";
@@ -40,6 +49,7 @@ public class ResourcePath {
     public static final String SOURCE_DIR = BASE_DIR + "source/";
     public static final String SAVE_DIR;
     public static final String CONFIG_DIR = BASE_DIR + "config/";
+    public static final String HELP_DIR = BASE_DIR + "help/";
 
     static {
         SAVE_DIR = detectSaveDir();
@@ -59,8 +69,24 @@ public class ResourcePath {
     public static String getSaveFile(int mode) { return SAVE_DIR + "mode_" + mode + ".sav"; }
     public static String getHighScoreFile(int mode) { return SAVE_DIR + "highscores_" + mode + ".sav"; }
     public static String getSettingsFile() { return SAVE_DIR + "settings.sav"; }
+    public static String getHelpImage(String name) { return HELP_DIR + name; }
+
+    public static InputStream getResourceAsStream(String path) {
+        String resourcePath = path;
+        if (path.startsWith(BASE_DIR)) {
+            resourcePath = path.substring(BASE_DIR.length());
+        }
+        InputStream is = ResourcePath.class.getClassLoader().getResourceAsStream(resourcePath);
+        if (is == null) {
+            is = ResourcePath.class.getClassLoader().getResourceAsStream("resource/" + resourcePath);
+        }
+        return is;
+    }
 
     public static boolean exists(String path) {
+        if (RUNNING_FROM_JAR) {
+            return getResourceAsStream(path) != null;
+        }
         return new File(path).exists();
     }
 
@@ -69,5 +95,9 @@ public class ResourcePath {
         if (!dir.exists()) return false;
         File[] files = dir.listFiles((d, name) -> name.endsWith(".sav") && name.startsWith("mode_"));
         return files != null && files.length > 0;
+    }
+
+    public static boolean isJarMode() {
+        return RUNNING_FROM_JAR;
     }
 }
