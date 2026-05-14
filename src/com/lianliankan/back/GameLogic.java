@@ -1,7 +1,10 @@
 package com.lianliankan.back;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Random;
 
 public class GameLogic {
@@ -49,129 +52,23 @@ public class GameLogic {
         if (v1 == null || v2 == null) return null;
         if (v1.color != v2.color) return null;
 
-        List<Vertex> path = new ArrayList<>();
+        GameGraph graph = GameGraph.fromMap(map);
+        GraphVertex start = graph.getVertex(v1.row, v1.col);
+        GraphVertex target = graph.getVertex(v2.row, v2.col);
 
-        path.clear();
-        path.add(v1);
-        if (linkInRow(map, v1, v2, path)) {
-            return new ArrayList<>(path);
-        }
-
-        path.clear();
-        path.add(v1);
-        if (linkInCol(map, v1, v2, path)) {
-            return new ArrayList<>(path);
-        }
-
-        path.clear();
-        path.add(v1);
-        if (oneCornerLink(map, v1, v2, path)) {
-            return new ArrayList<>(path);
-        }
-
-        path.clear();
-        path.add(v1);
-        if (twoCornerLink(map, v1, v2, path)) {
-            return new ArrayList<>(path);
-        }
-
-        return null;
+        return bfsLink(graph, start, target);
     }
 
-    private boolean isBlank(int[][] map, int row, int col) {
-        if (row < 0 || row >= map.length || col < 0 || col >= map[0].length) {
-            return true;
-        }
-        return map[row][col] == -1;
-    }
-
-    private boolean linkInRow(int[][] map, Vertex v1, Vertex v2, List<Vertex> path) {
-        if (v1.row != v2.row) return false;
-        int col1 = Math.min(v1.col, v2.col);
-        int col2 = Math.max(v1.col, v2.col);
-        for (int col = col1 + 1; col < col2; col++) {
-            if (!isBlank(map, v1.row, col)) return false;
-        }
-        path.add(new Vertex(v2.row, v2.col, v2.color));
-        return true;
-    }
-
-    private boolean linkInCol(int[][] map, Vertex v1, Vertex v2, List<Vertex> path) {
-        if (v1.col != v2.col) return false;
-        int row1 = Math.min(v1.row, v2.row);
-        int row2 = Math.max(v1.row, v2.row);
-        for (int row = row1 + 1; row < row2; row++) {
-            if (!isBlank(map, row, v1.col)) return false;
-        }
-        path.add(new Vertex(v2.row, v2.col, v2.color));
-        return true;
-    }
-
-    private boolean oneCornerLink(int[][] map, Vertex v1, Vertex v2, List<Vertex> path) {
-        Vertex corner1 = new Vertex(v1.row, v2.col, -1);
-        if (isBlank(map, corner1.row, corner1.col)) {
-            int originalSize = path.size();
-            path.add(corner1);
-            if (linkInRow(map, v1, corner1, path) && linkInCol(map, corner1, v2, path)) {
-                return true;
-            }
-            while (path.size() > originalSize) {
-                path.remove(path.size() - 1);
-            }
-        }
-
-        Vertex corner2 = new Vertex(v2.row, v1.col, -1);
-        if (isBlank(map, corner2.row, corner2.col)) {
-            int originalSize = path.size();
-            path.add(corner2);
-            if (linkInCol(map, v1, corner2, path) && linkInRow(map, corner2, v2, path)) {
-                return true;
-            }
-            while (path.size() > originalSize) {
-                path.remove(path.size() - 1);
-            }
-        }
-        return false;
-    }
-
-    private boolean twoCornerLink(int[][] map, Vertex v1, Vertex v2, List<Vertex> path) {
-        for (int i = -1; i <= map.length; i++) {
-            if (i == v1.row || i == v2.row) continue;
-            if (isBlank(map, i, v1.col) && isBlank(map, i, v2.col)) {
-                Vertex p1 = new Vertex(i, v1.col, -1);
-                Vertex p2 = new Vertex(i, v2.col, -1);
-                int originalSize = path.size();
-                path.add(p1);
-                path.add(p2);
-                if (linkInCol(map, v1, p1, path) && linkInRow(map, p1, p2, path) && linkInCol(map, p2, v2, path)) {
-                    return true;
-                }
-                while (path.size() > originalSize) {
-                    path.remove(path.size() - 1);
-                }
-            }
-        }
-
-        for (int j = -1; j <= map[0].length; j++) {
-            if (j == v1.col || j == v2.col) continue;
-            if (isBlank(map, v1.row, j) && isBlank(map, v2.row, j)) {
-                Vertex p1 = new Vertex(v1.row, j, -1);
-                Vertex p2 = new Vertex(v2.row, j, -1);
-                int originalSize = path.size();
-                path.add(p1);
-                path.add(p2);
-                if (linkInRow(map, v1, p1, path) && linkInCol(map, p1, p2, path) && linkInRow(map, p2, v2, path)) {
-                    return true;
-                }
-                while (path.size() > originalSize) {
-                    path.remove(path.size() - 1);
-                }
-            }
-        }
-        return false;
+    public List<Vertex> isLink(GameGraph graph, Vertex v1, Vertex v2) {
+        if (v1 == null || v2 == null) return null;
+        if (v1.color != v2.color) return null;
+        GraphVertex start = graph.getVertex(v1.row, v1.col);
+        GraphVertex target = graph.getVertex(v2.row, v2.col);
+        return bfsLink(graph, start, target);
     }
 
     public Vertex[] findMatch(int[][] map) {
+        GameGraph graph = GameGraph.fromMap(map);
         int rows = map.length;
         int cols = map[0].length;
         for (int r1 = 0; r1 < rows; r1++) {
@@ -184,7 +81,7 @@ public class GameLogic {
                         if (map[r1][c1] != map[r2][c2]) continue;
                         Vertex v1 = new Vertex(r1, c1, map[r1][c1]);
                         Vertex v2 = new Vertex(r2, c2, map[r2][c2]);
-                        List<Vertex> path = isLink(map, v1, v2);
+                        List<Vertex> path = isLink(graph, v1, v2);
                         if (path != null) {
                             return new Vertex[]{v1, v2};
                         }
@@ -196,6 +93,7 @@ public class GameLogic {
     }
 
     public List<Vertex> findMatchPath(int[][] map) {
+        GameGraph graph = GameGraph.fromMap(map);
         int rows = map.length;
         int cols = map[0].length;
         for (int r1 = 0; r1 < rows; r1++) {
@@ -208,7 +106,7 @@ public class GameLogic {
                         if (map[r1][c1] != map[r2][c2]) continue;
                         Vertex v1 = new Vertex(r1, c1, map[r1][c1]);
                         Vertex v2 = new Vertex(r2, c2, map[r2][c2]);
-                        List<Vertex> path = isLink(map, v1, v2);
+                        List<Vertex> path = isLink(graph, v1, v2);
                         if (path != null) {
                             return path;
                         }
@@ -260,5 +158,73 @@ public class GameLogic {
                 System.arraycopy(newMap[i], 0, map[i], 0, map[0].length);
             }
         }
+    }
+
+    private static class BFState {
+        GraphVertex node;
+        int dir;
+        int turns;
+        BFState parent;
+
+        BFState(GraphVertex node, int dir, int turns, BFState parent) {
+            this.node = node;
+            this.dir = dir;
+            this.turns = turns;
+            this.parent = parent;
+        }
+    }
+
+    private List<Vertex> bfsLink(GameGraph graph, GraphVertex start, GraphVertex target) {
+        Queue<BFState> queue = new LinkedList<>();
+        int totalNodes = graph.getAllVertices().size();
+        boolean[][][] visited = new boolean[totalNodes][5][3];
+        int dirIndex = 4;
+
+        queue.add(new BFState(start, -1, 0, null));
+        visited[start.id][dirIndex][0] = true;
+
+        while (!queue.isEmpty()) {
+            BFState cur = queue.poll();
+            if (cur.node == target && cur.turns <= 2) {
+                return buildPath(cur);
+            }
+
+            for (GraphVertex neighbor : cur.node.neighbors) {
+                if (neighbor.color != -1 && neighbor != target) continue;
+
+                int newDir = getDirection(cur.node, neighbor);
+                int newTurns = cur.turns;
+                if (cur.dir != -1 && newDir != cur.dir) {
+                    newTurns++;
+                }
+                if (newTurns > 2) continue;
+
+                int newDirIdx = newDir == -1 ? 4 : newDir;
+                if (!visited[neighbor.id][newDirIdx][newTurns]) {
+                    visited[neighbor.id][newDirIdx][newTurns] = true;
+                    queue.add(new BFState(neighbor, newDir, newTurns, cur));
+                }
+            }
+        }
+        return null;
+    }
+
+    private int getDirection(GraphVertex from, GraphVertex to) {
+        if (to.row == from.row && to.col == from.col + 1) return 1;
+        if (to.row == from.row && to.col == from.col - 1) return 3;
+        if (to.col == from.col && to.row == from.row + 1) return 2;
+        if (to.col == from.col && to.row == from.row - 1) return 0;
+        return -1;
+    }
+
+    private List<Vertex> buildPath(BFState endState) {
+        List<Vertex> path = new ArrayList<>();
+        BFState cur = endState;
+        while (cur != null) {
+            path.add(new Vertex(cur.node.row, cur.node.col, cur.node.color));
+            cur = cur.parent;
+        }
+        Collections.reverse(path);
+        return path;
     }
 }
