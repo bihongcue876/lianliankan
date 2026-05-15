@@ -5,6 +5,7 @@ import com.lianliankan.back.GameControl;
 import com.lianliankan.back.Vertex;
 import com.lianliankan.model.GameState;
 import com.lianliankan.model.ScoreRecord;
+import com.lianliankan.model.SettingsState;
 import com.lianliankan.util.ImageUtils;
 import com.lianliankan.util.ResourcePath;
 import com.lianliankan.util.UIUtils;
@@ -109,7 +110,13 @@ public class GamePanel extends JPanel {
         setPreferredSize(new Dimension(800, 600));
         setLayout(null);
 
-        loadTheme("fruit");
+        SettingsState settings = loadSettings();
+        String[] themes = {"fruit", "cxk", "mh"};
+        loadTheme(themes[settings.getThemeIndex()]);
+        m_nThemeType = settings.getThemeIndex();
+        AudioManager.setTheme(themes[settings.getThemeIndex()]);
+        AudioManager.setBgmVolume(settings.getBgmVolume());
+        AudioManager.setSfxVolume(settings.getSfxVolume());
 
         btnStart = UIUtils.createButton("开始游戏", 650, 50, 100, 35);
         btnPause = UIUtils.createButton("暂停", 650, 95, 100, 35);
@@ -878,6 +885,32 @@ public class GamePanel extends JPanel {
         deleteSaveFile();
     }
 
+    private SettingsState loadSettings() {
+        String settingsFile = ResourcePath.getSettingsFile();
+        File file = new File(settingsFile);
+        if (file.exists()) {
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(settingsFile))) {
+                return (SettingsState) ois.readObject();
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+        return new SettingsState(0, 80, 80);
+    }
+
+    private void saveSettings(SettingsState settings) {
+        String settingsFile = ResourcePath.getSettingsFile();
+        File dir = new File(ResourcePath.SAVE_DIR);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(settingsFile))) {
+            oos.writeObject(settings);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void gameFailed() {
         m_bPlaying = false;
         btnStart.setEnabled(true);
@@ -1005,20 +1038,31 @@ public class GamePanel extends JPanel {
             countdownTimer.stop();
         }
         
+        SettingsState currentSettings = loadSettings();
+        
         JDialog dlg = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "设置", true);
-        dlg.setSize(350, 200);
+        dlg.setSize(380, 280);
         dlg.setLocationRelativeTo(this);
-        JPanel contentPanel = new JPanel(new GridLayout(3, 1, 0, 10));
+        JPanel contentPanel = new JPanel(new GridLayout(4, 1, 0, 8));
         contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JPanel themePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel themeLabel = new JLabel("主题：");
+        themeLabel.setFont(new Font("宋体", Font.PLAIN, 14));
+        themePanel.add(themeLabel);
+        JComboBox<String> themeCombo = new JComboBox<>(new String[]{"水果", "CXK", "怪物猎人"});
+        themeCombo.setFont(new Font("宋体", Font.PLAIN, 14));
+        themeCombo.setSelectedIndex(currentSettings.getThemeIndex());
+        themePanel.add(themeCombo);
 
         JPanel bgmVolumePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel bgmVolumeLabel = new JLabel("背景音乐：");
         bgmVolumeLabel.setFont(new Font("宋体", Font.PLAIN, 14));
         bgmVolumePanel.add(bgmVolumeLabel);
-        JSlider bgmVolumeSlider = new JSlider(0, 100, AudioManager.getBgmVolume());
+        JSlider bgmVolumeSlider = new JSlider(0, 100, currentSettings.getBgmVolume());
         bgmVolumeSlider.setPreferredSize(new Dimension(150, 30));
         bgmVolumePanel.add(bgmVolumeSlider);
-        JLabel bgmVolumeValueLabel = new JLabel(AudioManager.getBgmVolume() + "%");
+        JLabel bgmVolumeValueLabel = new JLabel(currentSettings.getBgmVolume() + "%");
         bgmVolumeValueLabel.setFont(new Font("宋体", Font.PLAIN, 14));
         bgmVolumePanel.add(bgmVolumeValueLabel);
         bgmVolumeSlider.addChangeListener(e -> {
@@ -1030,10 +1074,10 @@ public class GamePanel extends JPanel {
         JLabel sfxVolumeLabel = new JLabel("音效：    ");
         sfxVolumeLabel.setFont(new Font("宋体", Font.PLAIN, 14));
         sfxVolumePanel.add(sfxVolumeLabel);
-        JSlider sfxVolumeSlider = new JSlider(0, 100, AudioManager.getSfxVolume());
+        JSlider sfxVolumeSlider = new JSlider(0, 100, currentSettings.getSfxVolume());
         sfxVolumeSlider.setPreferredSize(new Dimension(150, 30));
         sfxVolumePanel.add(sfxVolumeSlider);
-        JLabel sfxVolumeValueLabel = new JLabel(AudioManager.getSfxVolume() + "%");
+        JLabel sfxVolumeValueLabel = new JLabel(currentSettings.getSfxVolume() + "%");
         sfxVolumeValueLabel.setFont(new Font("宋体", Font.PLAIN, 14));
         sfxVolumePanel.add(sfxVolumeValueLabel);
         sfxVolumeSlider.addChangeListener(e -> {
@@ -1042,11 +1086,35 @@ public class GamePanel extends JPanel {
         });
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JButton closeBtn = new JButton("关闭");
-        closeBtn.setFont(new Font("宋体", Font.PLAIN, 14));
-        closeBtn.addActionListener(e -> dlg.dispose());
-        btnPanel.add(closeBtn);
+        JButton saveBtn = new JButton("保存");
+        JButton cancelBtn = new JButton("取消");
+        saveBtn.setFont(new Font("宋体", Font.PLAIN, 14));
+        cancelBtn.setFont(new Font("宋体", Font.PLAIN, 14));
+        saveBtn.addActionListener(e -> {
+            SettingsState settings = new SettingsState(
+                themeCombo.getSelectedIndex(), 
+                bgmVolumeSlider.getValue(),
+                sfxVolumeSlider.getValue()
+            );
+            saveSettings(settings);
+            AudioManager.setBgmVolume(settings.getBgmVolume());
+            AudioManager.setSfxVolume(settings.getSfxVolume());
+            String[] themes = {"fruit", "cxk", "mh"};
+            String newTheme = themes[settings.getThemeIndex()];
+            if (!newTheme.equals(m_strCurrentTheme)) {
+                loadTheme(newTheme);
+                m_strCurrentTheme = newTheme;
+                m_nThemeType = settings.getThemeIndex();
+                AudioManager.setTheme(newTheme);
+                repaint();
+            }
+            dlg.dispose();
+        });
+        cancelBtn.addActionListener(e -> dlg.dispose());
+        btnPanel.add(saveBtn);
+        btnPanel.add(cancelBtn);
 
+        contentPanel.add(themePanel);
         contentPanel.add(bgmVolumePanel);
         contentPanel.add(sfxVolumePanel);
         contentPanel.add(btnPanel);
